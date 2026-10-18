@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fancy Subnet Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import "tailwindcss";
+        /* Custom Styles for a Sleek UI */
+        body {
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+            font-family: 'Inter', sans-serif;
+            color: #e2e8f0;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Custom Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        /* WebKit (Chrome, Safari, Edge) */
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 12px;
+            cursor: pointer;
+            background: #334155;
+            border-radius: 999px;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            height: 32px;
+            width: 32px;
+            border-radius: 50%;
+            background: #06b6d4; /* Cyan 500 */
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -10px;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.6), inset 0 2px 4px rgba(255,255,255,0.4);
+            border: 2px solid #fff;
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.8), inset 0 2px 4px rgba(255,255,255,0.4);
+        }
+
+        /* Firefox */
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 12px;
+            cursor: pointer;
+            background: #334155;
+            border-radius: 999px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        input[type=range]::-moz-range-thumb {
+            height: 32px;
+            width: 32px;
+            border-radius: 50%;
+            background: #06b6d4;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.6), inset 0 2px 4px rgba(255,255,255,0.4);
+            border: 2px solid #fff;
+            transition: transform 0.1s ease;
+        }
+
+        input[type=range]::-moz-range-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        .data-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .data-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+
+        /* Animation for value updates */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); color: #22d3ee; }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.2s ease-out;
+        }
+    </style>
+    <!-- Import Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 selection:bg-cyan-500 selection:text-white">
+
+    <div class="glass-card w-full max-w-2xl rounded-3xl p-8 sm:p-12 relative overflow-hidden">
+        
+        <!-- Decorative Glow Effects -->
+        <div class="absolute top-0 left-0 w-64 h-64 bg-cyan-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 pointer-events-none"></div>
+        <div class="absolute bottom-0 right-0 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 pointer-events-none"></div>
+
+        <div class="relative z-10">
+            <!-- Header -->
+            <div class="text-center mb-10">
+                <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-2">
+                    Subnet Scope
+                </h1>
+                <p class="text-slate-400 font-medium">Slide to calculate network parameters instantly</p>
+            </div>
+
+            <!-- CIDR Display -->
+            <div class="flex justify-center items-end mb-4 h-24">
+                <span class="text-7xl sm:text-8xl font-black text-white drop-shadow-[0_0_15px_rgba(6,182,212,0.4)] tracking-tighter" id="cidr-display">/24</span>
+            </div>
+
+            <!-- IP Input -->
+            <div class="mb-8 relative max-w-xs mx-auto z-20">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                </div>
+                <input type="text" id="ip-input" value="192.168.1.0" class="block w-full p-3 pl-11 text-center text-lg font-mono text-white bg-slate-900/60 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all placeholder-slate-500 outline-none" placeholder="Enter IP Address">
+            </div>
+
+            <!-- Slider Container -->
+            <div class="mb-12 relative">
+                <div class="flex justify-between text-xs font-semibold text-slate-500 mb-3 px-1">
+                    <span>/8 (Massive)</span>
+                    <span>/32 (Single Host)</span>
+                </div>
+                <!-- Range Input -->
+                <input type="range" min="8" max="32" value="24" id="cidr-slider">
+                
+                <!-- Track Fill (Visual flair for the slider) -->
+                <div class="absolute top-[28px] left-0 h-[12px] bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full pointer-events-none transition-all duration-75" id="slider-fill" style="width: 66.66%;"></div>
+            </div>
+
+            <!-- Results Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                <!-- Usable Hosts -->
+                <div class="data-card p-6 rounded-2xl flex flex-col justify-center border-l-4 border-l-cyan-400">
+                    <span class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1">Usable Hosts</span>
+                    <span class="text-3xl font-bold text-white break-all" id="usable-hosts">254</span>
+                </div>
+
+                <!-- Total Hosts -->
+                <div class="data-card p-6 rounded-2xl flex flex-col justify-center">
+                    <span class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Hosts</span>
+                    <span class="text-2xl font-semibold text-slate-200 break-all" id="total-hosts">256</span>
+                </div>
+
+                <!-- Subnet Mask -->
+                <div class="data-card p-6 rounded-2xl flex flex-col justify-center">
+                    <span class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1">Subnet Mask</span>
+                    <span class="text-xl font-semibold text-cyan-300 font-mono tracking-tight" id="subnet-mask">255.255.255.0</span>
+                </div>
+
+                <!-- Wildcard Mask -->
+                <div class="data-card p-6 rounded-2xl flex flex-col justify-center">
+                    <span class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1">Wildcard Mask</span>
+                    <span class="text-xl font-semibold text-purple-300 font-mono tracking-tight" id="wildcard-mask">0.0.0.255</span>
+                </div>
+
+                <!-- Network Address -->
+                <div class="data-card p-6 rounded-2xl flex flex-col justify-center">
+                    <span class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1">Network Address</span>
+                    <span class="text-xl font-semibold text-emerald-300 font-mono tracking-tight" id="network-address">192.168.1.0</span>
+                </div>
+
+                <!-- Broadcast Address -->
+                <div class="data-card p-6 rounded-2xl flex flex-col justify-center">
+                    <span class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1">Broadcast Address</span>
+                    <span class="text-xl font-semibold text-rose-300 font-mono tracking-tight" id="broadcast-address">192.168.1.255</span>
+                </div>
+
+                <!-- Usable Host Range -->
+                <div class="data-card p-6 rounded-2xl flex flex-col justify-center sm:col-span-2 border-t border-t-slate-700/50 mt-2 sm:mt-0">
+                    <span class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1 text-center sm:text-left">Usable Host Range</span>
+                    <span class="text-xl font-semibold text-white font-mono tracking-tight text-center sm:text-left" id="host-range">192.168.1.1 - 192.168.1.254</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const slider = document.getElementById('cidr-slider');
+        const sliderFill = document.getElementById('slider-fill');
+        const cidrDisplay = document.getElementById('cidr-display');
+        const usableDisplay = document.getElementById('usable-hosts');
+        const totalDisplay = document.getElementById('total-hosts');
+        const maskDisplay = document.getElementById('subnet-mask');
+        const wildcardDisplay = document.getElementById('wildcard-mask');
+
+        // New DOM Elements
+        const ipInput = document.getElementById('ip-input');
+        const networkDisplay = document.getElementById('network-address');
+        const broadcastDisplay = document.getElementById('broadcast-address');
+        const rangeDisplay = document.getElementById('host-range');
+
+        // Number formatter for large host counts
+        const formatter = new Intl.NumberFormat('en-US');
+
+        // IP Validation Regex
+        const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
+        // Helper: IP string to 32-bit integer
+        function ipToInt(ip) {
+            return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
+        }
+
+        // Helper: 32-bit integer to IP string
+        function intToIp(int) {
+            return [
+                (int >>> 24) & 255,
+                (int >>> 16) & 255,
+                (int >>> 8) & 255,
+                int & 255
+            ].join('.');
+        }
+
+        // Function to calculate subnet properties based on CIDR
+        function calculateSubnet(cidr) {
+            // 1. Calculate Hosts
+            // Total Hosts = 2 ^ (32 - CIDR)
+            const totalHosts = Math.pow(2, 32 - cidr);
+            
+            // Usable Hosts = Total - 2 (Network and Broadcast addresses)
+            // Special cases: /32 has 0 usable (or 1 depending on context, we'll use 0). /31 has 2 usable (RFC 3021 point-to-point).
+            let usableHosts = 0;
+            if (cidr === 32) {
+                usableHosts = 0; 
+            } else if (cidr === 31) {
+                usableHosts = 2;
+            } else {
+                usableHosts = totalHosts - 2;
+            }
+
+            // 2. Calculate Subnet Mask
+            // Shift 32 bits left by (32 - CIDR), then force unsigned 32-bit integer
+            const maskInt = (0xffffffff << (32 - cidr)) >>> 0;
+            const maskStr = [
+                (maskInt >>> 24) & 255,
+                (maskInt >>> 16) & 255,
+                (maskInt >>> 8) & 255,
+                maskInt & 255
+            ].join('.');
+
+            // 3. Calculate Wildcard Mask
+            // Bitwise NOT of the subnet mask
+            const wildcardInt = ~maskInt >>> 0;
+            const wildcardStr = [
+                (wildcardInt >>> 24) & 255,
+                (wildcardInt >>> 16) & 255,
+                (wildcardInt >>> 8) & 255,
+                wildcardInt & 255
+            ].join('.');
+
+            return {
+                total: totalHosts,
+                usable: usableHosts,
+                mask: maskStr,
+                wildcard: wildcardStr
+            };
+        }
+
+        // Function to trigger CSS animation
+        function triggerAnimation(element) {
+            element.classList.remove('animate-pop');
+            // Trigger reflow to restart animation
+            void element.offsetWidth; 
+            element.classList.add('animate-pop');
+        }
+
+        // Function to update the UI
+        function updateUI() {
+            const cidr = parseInt(slider.value, 10);
+            const data = calculateSubnet(cidr);
+
+            // Update Text Values
+            cidrDisplay.textContent = `/${cidr}`;
+            usableDisplay.textContent = formatter.format(data.usable);
+            totalDisplay.textContent = formatter.format(data.total);
+            maskDisplay.textContent = data.mask;
+            wildcardDisplay.textContent = data.wildcard;
+
+            // Calculate Network, Broadcast, and Range
+            const ipVal = ipInput.value.trim();
+            if (ipRegex.test(ipVal)) {
+                ipInput.classList.remove('border-rose-500', 'focus:ring-rose-500');
+                ipInput.classList.add('border-slate-600/50', 'focus:border-cyan-500');
+                
+                // Calculate logic matching our JS integers
+                const maskInt = (0xffffffff << (32 - cidr)) >>> 0;
+                const ipInt = ipToInt(ipVal);
+                
+                const networkInt = (ipInt & maskInt) >>> 0;
+                const wildcardInt = (~maskInt) >>> 0;
+                const broadcastInt = (networkInt | wildcardInt) >>> 0;
+                
+                networkDisplay.textContent = intToIp(networkInt);
+                broadcastDisplay.textContent = intToIp(broadcastInt);
+                
+                // Host Range edge cases
+                if (cidr === 32) {
+                    rangeDisplay.textContent = `${intToIp(networkInt)} (Single Host)`;
+                } else if (cidr === 31) {
+                    rangeDisplay.textContent = `${intToIp(networkInt)} - ${intToIp(broadcastInt)}`;
+                } else {
+                    rangeDisplay.textContent = `${intToIp((networkInt + 1) >>> 0)} - ${intToIp((broadcastInt - 1) >>> 0)}`;
+                }
+            } else {
+                // Style as invalid if regex fails
+                ipInput.classList.add('border-rose-500', 'focus:ring-rose-500');
+                ipInput.classList.remove('border-slate-600/50', 'focus:border-cyan-500');
+                networkDisplay.textContent = "Invalid IP";
+                broadcastDisplay.textContent = "Invalid IP";
+                rangeDisplay.textContent = "Invalid IP";
+            }
+
+            // Update Slider Fill (Visual bar behind the thumb)
+            // Calculate percentage based on min(8) and max(32)
+            const min = parseInt(slider.min, 10);
+            const max = parseInt(slider.max, 10);
+            const percentage = ((cidr - min) / (max - min)) * 100;
+            
+            // Adjust width to align well with the thumb radius
+            sliderFill.style.width = `calc(${percentage}% + (${16 - (percentage * 0.32)}px))`;
+
+            // Trigger animations for primary dynamic elements
+            triggerAnimation(cidrDisplay);
+            triggerAnimation(usableDisplay);
+        }
+
+        // Event Listeners
+        slider.addEventListener('input', updateUI);
+        ipInput.addEventListener('input', updateUI);
+
+        // Initial paint
+        updateUI();
+    </script>
+</body>
+</html>
