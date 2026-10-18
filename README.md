@@ -12,7 +12,7 @@ This tool was conceptualized to eliminate the need for outdated, ad-heavy subnet
 * **Client-Side Only:** Runs entirely in the browser with no backend requirements.
 
 ## Live Demo
-[View the live calculator here](https://imamsdestiny.github.io/Subnetting-for-noobs/)
+[View the live calculator here](https://imamsdestiny.github.io/NetShift/)
 
 ## Development Process & Tech Stack
 * **Tech Stack:** HTML5, CSS3, Vanilla JavaScript
